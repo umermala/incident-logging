@@ -1,4 +1,4 @@
-name: CI
+name: CI for incident logging code
 
 on:
   push:
