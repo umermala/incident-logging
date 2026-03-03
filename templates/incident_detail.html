@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %} · Edit Incident{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h1 class="h4 mb-1">Edit Incident</h1>
+    <p class="text-muted mb-0">
+      {{ project.name }} · {{ incident.title }}
+    </p>
+  </div>
+  <a href="{{ url_for('project_detail', project_id=project.id) }}" class="btn btn-outline-secondary btn-sm">
+    Back to Project
+  </a>
+</div>
+
+<div class="row g-4">
+  <div class="col-md-7">
+    <div class="card glass-card">
+      <div class="card-body">
+        <form method="post" novalidate>
+          <div class="mb-3">
+            <label class="form-label">Title</label>
+            <input type="text" name="title" class="form-control" required value="{{ incident.title }}">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea name="description" rows="3" class="form-control"
+              placeholder="Impact, root cause, detection, mitigation...">{{ incident.description or "" }}</textarea>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Severity</label>
+              <select name="severity" class="form-select">
+                <option value="critical" {% if incident.severity == 'critical' %}selected{% endif %}>Critical</option>
+                <option value="high" {% if incident.severity == 'high' %}selected{% endif %}>High</option>
+                <option value="medium" {% if incident.severity == 'medium' %}selected{% endif %}>Medium</option>
+                <option value="low" {% if incident.severity == 'low' %}selected{% endif %}>Low</option>
+              </select>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Downtime (minutes)</label>
+              <input type="number" name="downtime_minutes" min="0" class="form-control"
+                value="{{ incident.downtime_minutes if incident.downtime_minutes is not none }}">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Occurred At</label>
+            <input type="datetime-local" name="occurred_at" class="form-control"
+              value="{% if incident.occurred_at %}{{ incident.occurred_at.strftime('%Y-%m-%dT%H:%M') }}{% endif %}">
+          </div>
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" role="switch" name="is_resolved" id="resolvedSwitch"
+              {% if incident.is_resolved %}checked{% endif %}>
+            <label class="form-check-label" for="resolvedSwitch">Resolved</label>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Resolution / Notes</label>
+            <textarea name="resolution_summary" rows="3" class="form-control"
+              placeholder="Fix, follow-ups, links to runbooks, etc.">{{ incident.resolution_summary or "" }}</textarea>
+          </div>
+          <div class="d-flex justify-content-between">
+            <a href="{{ url_for('project_detail', project_id=project.id) }}" class="btn btn-outline-secondary">
+              Cancel
+            </a>
+            <button type="submit" class="btn btn-primary">
+              Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-5">
+    <div class="card glass-card">
+      <div class="card-body">
+        <h2 class="h6 mb-3">Incident Meta</h2>
+        <dl class="row mb-0 small">
+          <dt class="col-4 text-muted">Project</dt>
+          <dd class="col-8">{{ project.name }}</dd>
+
+          <dt class="col-4 text-muted">Status</dt>
+          <dd class="col-8">
+            {% if incident.is_resolved %}
+              <span class="badge bg-success">Resolved</span>
+            {% else %}
+              <span class="badge bg-warning text-dark">Open</span>
+            {% endif %}
+          </dd>
+
+          <dt class="col-4 text-muted">Occurred</dt>
+          <dd class="col-8">
+            {% if incident.occurred_at %}
+              {{ incident.occurred_at.strftime('%Y-%m-%d %H:%M') }}
+            {% else %}
+              —
+            {% endif %}
+          </dd>
+
+          <dt class="col-4 text-muted">Resolved</dt>
+          <dd class="col-8">
+            {% if incident.resolved_at %}
+              {{ incident.resolved_at.strftime('%Y-%m-%d %H:%M') }}
+            {% else %}
+              —
+            {% endif %}
+          </dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

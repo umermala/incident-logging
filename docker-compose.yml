@@ -1,0 +1,21 @@
+version: "3.9"
+
+services:
+  infrapulse:
+    build: .
+    container_name: infrapulse
+    ports:
+      - "5000:5000"
+    environment:
+      ADMIN_USERNAME: "${ADMIN_USERNAME:-admin}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:-admin}"
+      SECRET_KEY: "${SECRET_KEY:-change-me}"
+      SQLITE_DB_PATH: "/app/data/infra_pulse.db"
+    volumes:
+      - infrapulse_data:/app/data
+    restart: unless-stopped
+
+volumes:
+  infrapulse_data:
+    driver: local
+

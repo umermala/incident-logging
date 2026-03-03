@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %} · Projects{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-md-5">
+    <div class="card glass-card h-100">
+      <div class="card-body">
+        <h1 class="h5 mb-3">Create Project</h1>
+        <form method="post" novalidate>
+          <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input type="text" name="name" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea name="description" rows="3" class="form-control"
+              placeholder="What part of infra does this cover?"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">
+            Add Project
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-7">
+    <div class="card glass-card h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h2 class="h5 mb-0">Projects</h2>
+          <a href="{{ url_for('dashboard') }}" class="btn btn-sm btn-outline-secondary">Back to Dashboard</a>
+        </div>
+        {% if projects %}
+        <div class="list-group list-group-flush">
+          {% for project in projects %}
+          {% set open_count = project.incidents | selectattr('is_resolved', 'equalto', False) | list | length %}
+          {% set closed_count = project.incidents | selectattr('is_resolved', 'equalto', True) | list | length %}
+          <div class="list-group-item project-list-item d-flex justify-content-between align-items-center">
+            <a href="{{ url_for('project_detail', project_id=project.id) }}" class="text-decoration-none flex-grow-1 me-3">
+              <div class="fw-semibold">{{ project.name }}</div>
+              <div class="small text-muted">
+                {{ project.description or "No description" }}
+              </div>
+            </a>
+            <div class="text-end small me-3">
+              <div><span class="badge bg-warning text-dark me-1">{{ open_count }}</span> open</div>
+              <div><span class="badge bg-success me-1">{{ closed_count }}</span> closed</div>
+            </div>
+            <form method="post" action="{{ url_for('delete_project', project_id=project.id) }}" onsubmit="return confirm('Delete this project and all its incidents?');">
+              <button type="submit" class="btn btn-sm btn-outline-danger">
+                Delete
+              </button>
+            </form>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">No projects yet. Create one to start tracking incidents.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

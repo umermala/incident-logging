@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %} · Admin Login{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-5">
+    <div class="card glass-card shadow-lg">
+      <div class="card-body p-4">
+        <h1 class="h4 mb-3 text-center fw-bold">{{ app_name }} Admin</h1>
+        <p class="text-center text-muted small mb-4">
+          Secure gateway for your infra incident timelines.
+        </p>
+        <form method="post" novalidate>
+          <div class="mb-3">
+            <label class="form-label">Username</label>
+            <input type="text" name="username" class="form-control" required autofocus>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input type="password" name="password" class="form-control" required>
+            <div class="form-text text-muted">
+              Defaults to <code>admin/admin</code> if env vars are not set.
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary w-100 mb-2">Sign in</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

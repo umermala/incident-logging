@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %} · Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="h3 mb-1">Incident Overview</h1>
+    <p class="text-muted mb-0">Project health and incident history at a glance.</p>
+  </div>
+  <a href="{{ url_for('projects_view') }}" class="btn btn-outline-primary">
+    Manage Projects
+  </a>
+</div>
+
+<div class="row g-4">
+  <div class="col-md-6">
+    <div class="card glass-card h-100">
+      <div class="card-body">
+        <h2 class="h5 mb-3">Open vs Closed by Project</h2>
+        {% if project_labels %}
+        <canvas id="projectStatusChart" height="200"></canvas>
+        {% else %}
+        <p class="text-muted mb-0">Create a project to start logging incidents.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card glass-card h-100">
+      <div class="card-body">
+        <h2 class="h5 mb-3">Incidents per Month</h2>
+        {% if monthly_labels %}
+        <canvas id="monthlyChart" height="200"></canvas>
+        {% else %}
+        <p class="text-muted mb-0">No incidents logged yet. Your infra is squeaky clean.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if projects %}
+<div class="row g-4 mt-1">
+  <div class="col-12">
+    <div class="card glass-card">
+      <div class="card-body">
+        <h2 class="h5 mb-3">Projects</h2>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead>
+              <tr>
+                <th scope="col">Project</th>
+                <th scope="col">Description</th>
+                <th scope="col" class="text-center">Open</th>
+                <th scope="col" class="text-center">Closed</th>
+                <th scope="col" class="text-center">Total</th>
+                <th scope="col" class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in projects %}
+              {% set open_count = p.incidents | selectattr('is_resolved', 'equalto', False) | list | length %}
+              {% set closed_count = p.incidents | selectattr('is_resolved', 'equalto', True) | list | length %}
+              <tr>
+                <td class="fw-semibold">
+                  <a href="{{ url_for('project_detail', project_id=p.id) }}" class="text-decoration-none">
+                    {{ p.name }}
+                  </a>
+                </td>
+                <td class="text-muted small">{{ p.description or "—" }}</td>
+                <td class="text-center text-warning">{{ open_count }}</td>
+                <td class="text-center text-success">{{ closed_count }}</td>
+                <td class="text-center">{{ open_count + closed_count }}</td>
+                <td class="text-end">
+                  <a href="{{ url_for('project_detail', project_id=p.id) }}" class="btn btn-sm btn-outline-secondary">
+                    View
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+  const projectLabels = {{ project_labels|tojson }};
+  const openCounts = {{ open_counts|tojson }};
+  const closedCounts = {{ closed_counts|tojson }};
+  const monthlyLabels = {{ monthly_labels|tojson }};
+  const monthlyCounts = {{ monthly_counts|tojson }};
+
+  if (projectLabels.length) {
+    const ctx1 = document.getElementById('projectStatusChart');
+    new Chart(ctx1, {
+      type: 'bar',
+      data: {
+        labels: projectLabels,
+        datasets: [
+          {
+            label: 'Open',
+            data: openCounts,
+            backgroundColor: 'rgba(59, 130, 246, 0.7)'
+          },
+          {
+            label: 'Closed',
+            data: closedCounts,
+            backgroundColor: 'rgba(16, 185, 129, 0.7)'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        indexAxis: 'x',
+        plugins: {
+          legend: {},
+          tooltip: {}
+        },
+        scales: {
+          x: {
+            beginAtZero: true
+          },
+          y: {
+            beginAtZero: true,
+            ticks: {
+              stepSize: 1
+            }
+          }
+        }
+      }
+    });
+  }
+
+  if (monthlyLabels.length) {
+    const ctx2 = document.getElementById('monthlyChart');
+    new Chart(ctx2, {
+      type: 'line',
+      data: {
+        labels: monthlyLabels,
+        datasets: [
+          {
+            label: 'Incidents',
+            data: monthlyCounts,
+            borderColor: 'rgba(59, 130, 246, 1)',
+            backgroundColor: 'rgba(59, 130, 246, 0.15)',
+            tension: 0.25,
+            fill: true
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: {
+            beginAtZero: false
+          },
+          y: {
+            beginAtZero: true,
+            ticks: {
+              stepSize: 1
+            }
+          }
+        }
+      }
+    });
+  }
+</script>
+{% endblock %}
+

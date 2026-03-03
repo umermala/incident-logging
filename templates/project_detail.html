@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %} · {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h1 class="h4 mb-1">{{ project.name }}</h1>
+    <p class="text-muted mb-0">{{ project.description or "No description" }}</p>
+  </div>
+  <a href="{{ url_for('projects_view') }}" class="btn btn-outline-secondary btn-sm">Back to Projects</a>
+</div>
+
+<div class="row g-4">
+  <div class="col-md-5">
+    <div class="card glass-card h-100">
+      <div class="card-body">
+        <h2 class="h5 mb-3">Log Incident</h2>
+        <form method="post" novalidate>
+          <div class="mb-3">
+            <label class="form-label">Title</label>
+            <input type="text" name="title" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea name="description" rows="3" class="form-control"
+              placeholder="Impact, root cause, detection, mitigation..."></textarea>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Severity</label>
+              <select name="severity" class="form-select">
+                <option value="critical">Critical</option>
+                <option value="high">High</option>
+                <option value="medium" selected>Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Downtime (minutes)</label>
+              <input type="number" name="downtime_minutes" min="0" class="form-control" placeholder="e.g. 12">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Occurred At</label>
+            <input type="datetime-local" name="occurred_at" class="form-control">
+            <div class="form-text text-muted">
+              Leave empty to use the current time.
+            </div>
+          </div>
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" role="switch" name="is_resolved" id="resolvedSwitch">
+            <label class="form-check-label" for="resolvedSwitch">Resolved</label>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Resolution / Notes</label>
+            <textarea name="resolution_summary" rows="3" class="form-control"
+              placeholder="Fix, follow-ups, links to runbooks, etc."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">
+            Save Incident
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-7">
+    <div class="card glass-card h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h2 class="h5 mb-0">Incidents</h2>
+          <span class="badge bg-secondary">
+            {{ incidents|length }} total
+          </span>
+        </div>
+        {% if incidents %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead>
+              <tr>
+                <th scope="col">Title</th>
+                <th scope="col">Severity</th>
+                <th scope="col">Downtime</th>
+                <th scope="col">Occurred</th>
+                <th scope="col">Status</th>
+                <th scope="col" class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for incident in incidents %}
+              <tr>
+                <td>
+                  <div class="fw-semibold">
+                    <a href="{{ url_for('incident_detail', incident_id=incident.id) }}" class="text-decoration-none">
+                      {{ incident.title }}
+                    </a>
+                  </div>
+                  <div class="small text-muted text-truncate" style="max-width: 260px;">
+                    {{ incident.description or "No description" }}
+                  </div>
+                </td>
+                <td>
+                  {% if incident.severity == 'critical' %}
+                    <span class="badge bg-danger">Critical</span>
+                  {% elif incident.severity == 'high' %}
+                    <span class="badge bg-warning text-dark">High</span>
+                  {% elif incident.severity == 'medium' %}
+                    <span class="badge bg-info text-dark">Medium</span>
+                  {% else %}
+                    <span class="badge bg-secondary">Low</span>
+                  {% endif %}
+                </td>
+                <td class="small">
+                  {% if incident.downtime_minutes is not none %}
+                    {{ incident.downtime_minutes }} min
+                  {% else %}
+                    —
+                  {% endif %}
+                </td>
+                <td class="small">
+                  {{ incident.occurred_at.strftime('%Y-%m-%d %H:%M') if incident.occurred_at }}
+                </td>
+                <td>
+                  {% if incident.is_resolved %}
+                    <span class="badge bg-success">Resolved</span>
+                  {% else %}
+                    <span class="badge bg-warning text-dark">Open</span>
+                  {% endif %}
+                </td>
+                <td class="text-end">
+                  <div class="d-inline-flex gap-1">
+                    <form method="post" action="{{ url_for('toggle_incident_resolved', incident_id=incident.id) }}">
+                      <button class="btn btn-sm btn-outline-primary">
+                        {% if incident.is_resolved %}Reopen{% else %}Resolve{% endif %}
+                      </button>
+                    </form>
+                    <form method="post" action="{{ url_for('delete_incident', incident_id=incident.id) }}" onsubmit="return confirm('Delete this incident?');">
+                      <button class="btn btn-sm btn-outline-danger">
+                        Delete
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              {% if incident.resolution_summary %}
+              <tr>
+                <td colspan="6" class="small text-muted border-top-0">
+                  <strong>Resolution:</strong> {{ incident.resolution_summary }}
+                  {% if incident.resolved_at %}
+                    <span class="ms-2">(<strong>Resolved:</strong> {{ incident.resolved_at.strftime('%Y-%m-%d %H:%M') }})</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endif %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">No incidents logged yet. When things break, log them here.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
