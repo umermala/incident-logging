@@ -1,0 +1,6 @@
+# CODEOWNERS file
+# This file defines code owners who must review PRs to protected branches
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Repository owners - these users must approve PRs to production branch
+* @umermala @umermalaa
